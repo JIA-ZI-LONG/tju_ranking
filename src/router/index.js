@@ -12,6 +12,30 @@ export default new Router({
       meta: { requiresAuth: false }
     },
     {
+      path: '/about',
+      name: 'about',
+      component: () => import(/* webpackChunkName: "about" */ '../views/AboutView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/canteens',
+      name: 'canteens',
+      component: () => import(/* webpackChunkName: "canteens" */ '../views/CanteensView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/windows',
+      name: 'windows',
+      component: () => import(/* webpackChunkName: "windows" */ '../views/WindowsView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
+      path: '/dishes',
+      name: 'dishes',
+      component: () => import(/* webpackChunkName: "dishes" */ '../views/DishesView.vue'),
+      meta: { requiresAuth: false }
+    },
+    {
       path: '/login',
       name: 'login',
       component: () => import(/* webpackChunkName: "login" */ '../views/LoginView.vue'),
