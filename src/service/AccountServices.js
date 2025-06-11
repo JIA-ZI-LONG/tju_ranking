@@ -1,4 +1,4 @@
-import http from '@/services/Request'
+import http from '../service/Request'
 const base = '/api/Account/'
 export default {
     /**检查指定名称是否使用 */
