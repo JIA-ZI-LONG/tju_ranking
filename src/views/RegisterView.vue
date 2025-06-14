@@ -4,38 +4,62 @@
       <div slot="header" class="clearfix">
         <h2>用户注册</h2>
       </div>
-      <el-form :model="registerForm" :rules="rules" ref="registerForm" label-width="100px">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="registerForm.username" placeholder="请输入用户名"></el-input>
-        </el-form-item>
-        <el-form-item label="密码" prop="password">
-          <el-input v-model="registerForm.password" type="password" placeholder="请输入密码"></el-input>
-        </el-form-item>
-        <el-form-item label="确认密码" prop="confirmPassword">
-          <el-input v-model="registerForm.confirmPassword" type="password" placeholder="请再次输入密码"></el-input>
-        </el-form-item>
-        <el-form-item label="邮箱" prop="email">
-          <el-input v-model="registerForm.email" placeholder="请输入邮箱"></el-input>
-        </el-form-item>
-        <el-form-item label="验证码" prop="code">
-          <el-input v-model="registerForm.phone" placeholder="请输入手机号"></el-input>
-        </el-form-item>
-        <el-form-item label="昵称" prop="nickname">
-          <el-input v-model="registerForm.nickname" placeholder="请输入昵称"></el-input>
-        </el-form-item>
-        <el-form-item label="性别" prop="gender">
-          <el-radio-group v-model="registerForm.gender">
-            <el-radio :label="0">女</el-radio>
-            <el-radio :label="1">男</el-radio>
-            <el-radio :label="2">未知</el-radio>
-          </el-radio-group>
-        </el-form-item>
+      <el-form :model="registerForm" :rules="rules" ref="registerForm" label-width="80px" size="small">
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="用户名" prop="username">
+              <el-input v-model="registerForm.username" placeholder="请输入用户名" prefix-icon="el-icon-user"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="邮箱" prop="email">
+              <div class="email-input">
+                <el-input v-model="registerForm.email" placeholder="请输入邮箱" prefix-icon="el-icon-message"></el-input>
+                <el-button type="primary" size="small" @click="sendVerificationCode" :disabled="codeButtonDisabled">
+                  {{ codeButtonText }}
+                </el-button>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="密码" prop="password">
+              <el-input v-model="registerForm.password" type="password" placeholder="请输入密码" prefix-icon="el-icon-lock"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="确认密码" prop="confirmPassword">
+              <el-input v-model="registerForm.confirmPassword" type="password" placeholder="请再次输入密码" prefix-icon="el-icon-lock"></el-input>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
+          <el-col :span="12">
+            <el-form-item label="验证码" prop="code">
+              <el-input v-model="registerForm.code" placeholder="请输入验证码" prefix-icon="el-icon-key"></el-input>
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="性别" prop="gender">
+              <el-radio-group v-model="registerForm.gender">
+                <el-radio :label="0">女</el-radio>
+                <el-radio :label="1">男</el-radio>
+                <el-radio :label="2">未知</el-radio>
+              </el-radio-group>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
         <el-form-item label="校区" prop="campus">
-          <el-select v-model="registerForm.campus" placeholder="请选择校区">
+          <el-select v-model="registerForm.campus" placeholder="请选择校区" style="width: 100%">
             <el-option label="北洋园校区" value="北洋园校区"></el-option>
             <el-option label="卫津路校区" value="卫津路校区"></el-option>
           </el-select>
         </el-form-item>
+
         <el-form-item>
           <el-button type="primary" @click="submitForm('registerForm')">注册</el-button>
           <el-button @click="resetForm('registerForm')">重置</el-button>
@@ -81,8 +105,7 @@ export default {
         password: '',
         confirmPassword: '',
         email: '',
-        phone: '',
-        nickname: '',
+        code: '',
         gender: 2,
         campus: ''
       },
@@ -104,10 +127,7 @@ export default {
         ],
         code: [
           { required: true, message: '请输入验证码', trigger: 'blur' },
-          { pattern: /^1[3-9]\d{9}$/, message: '验证码错误', trigger: 'blur' }
-        ],
-        nickname: [
-          { required: true, message: '请输入昵称', trigger: 'blur' }
+          { len: 6, message: '验证码长度应为6位', trigger: 'blur' }
         ],
         gender: [
           { required: true, message: '请选择性别', trigger: 'change' }
@@ -115,10 +135,43 @@ export default {
         campus: [
           { required: true, message: '请选择校区', trigger: 'change' }
         ]
-      }
+      },
+      codeButtonText: '获取验证码',
+      codeButtonDisabled: false,
+      countdown: 60
     }
   },
   methods: {
+    // 发送验证码
+    sendVerificationCode() {
+      if (!this.registerForm.email) {
+        this.$message.warning('请先输入邮箱地址')
+        return
+      }
+      if (!this.registerForm.username) {
+        this.$message.warning('请先输入用户名')
+        return
+      }
+
+      // TODO: 调用发送验证码接口
+      this.$message.success('验证码已发送到您的邮箱')
+      this.startCountdown()
+    },
+    // 开始倒计时
+    startCountdown() {
+      this.codeButtonDisabled = true
+      this.countdown = 60
+      const timer = setInterval(() => {
+        if (this.countdown > 0) {
+          this.countdown--
+          this.codeButtonText = `${this.countdown}秒后重试`
+        } else {
+          this.codeButtonDisabled = false
+          this.codeButtonText = '获取验证码'
+          clearInterval(timer)
+        }
+      }, 1000)
+    },
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
@@ -135,8 +188,7 @@ export default {
                 username: this.registerForm.username,
                 password: this.registerForm.password,
                 email: this.registerForm.email,
-                phone: this.registerForm.phone,
-                nickname: this.registerForm.nickname,
+                code: this.registerForm.code,
                 gender: this.registerForm.gender,
                 campus: this.registerForm.campus
               }
@@ -173,24 +225,68 @@ export default {
   align-items: center;
   min-height: 100vh;
   background-color: #f5f7fa;
+  background-image: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
 .register-card {
-  width: 500px;
+  width: 800px;
+  margin: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
 }
 
 .links {
-  margin-top: 20px;
+  margin-top: 15px;
   text-align: center;
+  display: flex;
+  justify-content: space-between;
 }
 
 .links a {
-  margin: 0 10px;
   color: #409EFF;
   text-decoration: none;
+  font-size: 14px;
 }
 
 .links a:hover {
   color: #66b1ff;
+}
+
+.el-form-item {
+  margin-bottom: 20px;
+}
+
+.el-card__header {
+  padding: 15px 20px;
+  border-bottom: 1px solid #ebeef5;
+}
+
+h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #303133;
+  text-align: center;
+}
+
+.email-input {
+  display: flex;
+  gap: 10px;
+}
+
+.email-input .el-input {
+  flex: 1;
+}
+
+.email-input .el-button {
+  width: 120px;
+}
+
+.el-radio-group {
+  display: flex;
+  gap: 20px;
+}
+
+.el-select {
+  width: 100%;
 }
 </style>

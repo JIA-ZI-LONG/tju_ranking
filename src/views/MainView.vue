@@ -1,9 +1,25 @@
 <template>
   <div>
-    <h1>主页面</h1>
-    <router-link to="/user/profile"><button>用户信息</button></router-link>
-    <router-link to="/boss/statistics"><button>统计分析</button></router-link>
-    <router-link to="/admin/bulletins"><button>公告管理</button></router-link>
-    <router-link to="/"><button>回首页</button></router-link>
+    <MainMenu />
+    <div class="main-content">
+      <router-view/>
+    </div>
   </div>
 </template>
+
+<script>
+import MainMenu from '../components/MainMenu.vue'
+
+export default {
+  name: 'MainView',
+  components: {
+    MainMenu
+  }
+}
+</script>
+
+<style scoped>
+.main-content {
+  padding: 20px;
+}
+</style>
