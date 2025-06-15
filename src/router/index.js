@@ -83,49 +83,5 @@ export default new Router({
         }
       ]
     },
-    // boss 子路由
-    {
-      path: '/boss/statistics',
-      name: 'statisticsA',
-      component: () => import(/* webpackChunkName: "boss-statistics" */ '../views/boss/StatisticsAnalytics.vue'),
-      meta: { requiresAuth: false }
-    },
-    {
-      path: '/boss/role',
-      name: 'roleM',
-      component: () => import(/* webpackChunkName: "boss-role" */ '../views/boss/RoleManage.vue'),
-      meta: { requiresAuth: false }
-    },
-    {
-      path: '/boss/program',
-      name: 'programM',
-      component: () => import(/* webpackChunkName: "boss-program" */ '../views/boss/ProgrameManage.vue'),
-      meta: { requiresAuth: false }
-    },
-    // admin 子路由
-    {
-      path: '/admin/bulletins',
-      name: 'bulletinsM',
-      component: () => import(/* webpackChunkName: "admin-bulletins" */ '../views/admin/BulletinsManage.vue'),
-      meta: { requiresAuth: false }
-    },
-    {
-      path: '/admin/homepage',
-      name: 'homepageM',
-      component: () => import(/* webpackChunkName: "admin-homepage" */ '../views/admin/HomepageManage.vue'),
-      meta: { requiresAuth: false }
-    },
-    {
-      path: '/admin/data',
-      name: 'dataM',
-      component: () => import(/* webpackChunkName: "admin-data" */ '../views/admin/DataManage.vue'),
-      meta: { requiresAuth: false }
-    },
-    {
-      path: '/admin/blogs',
-      name: 'blogsM',
-      component: () => import(/* webpackChunkName: "admin-blogs" */ '../views/admin/BlogsManage.vue'),
-      meta: { requiresAuth: false }
-    }
   ]
 })
