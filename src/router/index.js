@@ -76,12 +76,12 @@ export default new Router({
           meta: { requiresAuth: false }
         },
         {
-          path: 'user/blog-details',
-          name: 'blogdetails',
-          component: () => import(/* webpackChunkName: "user-blog-details" */ '../views/user/BlogDetails.vue'),
+          path: 'user/window-details',
+          name: 'windowdetails', // 你可以自定义路由名称
+          component: () => import(/* webpackChunkName: "user-window-details" */ '../views/user/WindowsList.vue'),
           meta: { requiresAuth: false }
         }
       ]
-    },
+    }
   ]
 })
