@@ -14,25 +14,27 @@
     <!-- 核心功能导航 -->
     <el-card class="nav-card">
       <el-row :gutter="20" class="nav-links">
-        <el-col :span="6">
+        <el-col :span="8">
           <router-link to="/main/user/canteenslist" class="nav-item">
             <i class="el-icon-food"></i>
             <span>食堂大全</span>
           </router-link>
         </el-col>
+        <!--
         <el-col :span="6">
           <router-link to="/main/user/disheslist" class="nav-item">
             <i class="el-icon-dish"></i>
             <span>招牌菜品</span>
           </router-link>
         </el-col>
-        <el-col :span="6">
+        -->
+        <el-col :span="8">
           <router-link to="/main/user/blogslist" class="nav-item">
             <i class="el-icon-notebook-2"></i>
             <span>美食博客</span>
           </router-link>
         </el-col>
-        <el-col :span="6">
+        <el-col :span="8">
           <router-link to="/main/user/profile" class="nav-item">
             <i class="el-icon-user"></i>
             <span>个人中心</span>
