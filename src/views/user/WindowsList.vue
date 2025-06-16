@@ -100,90 +100,131 @@ export default {
   name: 'WindowDetails', // 内部组件名称
   data() {
     return {
-      window: { // 示例数据，实际应用中会通过路由参数加载
-        id: 1,
-        name: '川湘风味',
-        specialty: '麻辣香锅',
-        imageUrl: 'https://via.placeholder.com/600x400?text=川湘风味窗口',
-        rating: 4.8,
-        averagePrice: 18,
-        description: '以麻辣香锅为主打，提供地道川味体验，麻辣鲜香，深受喜爱。',
-        dishes: [
-          {
-            id: 1,
-            name: '麻辣香锅',
-            imageUrl: 'https://via.placeholder.com/300x200?text=麻辣香锅',
-            rating: 4.8,
-            price: 35,
-            description: '正宗川式麻辣香锅，配料丰富，麻辣鲜香。',
-            tags: ['招牌菜', '麻辣', '人气']
-          },
-          {
-            id: 2,
-            name: '水煮鱼',
-            imageUrl: 'https://via.placeholder.com/300x200?text=水煮鱼',
-            rating: 4.6,
-            price: 45,
-            description: '新鲜草鱼片，配以豆芽、青菜，麻辣鲜香。',
-            tags: ['招牌菜', '麻辣', '鱼类']
-          },
-          {
-            id: 3,
-            name: '毛血旺',
-            imageUrl: 'https://via.placeholder.com/300x200?text=毛血旺',
-            rating: 4.7,
-            price: 40,
-            description: '经典川菜，味道浓郁，食材丰富。',
-            tags: ['经典', '辣']
-          }
-        ],
-        reviews: [
-          {
-            id: 1,
-            username: '张三',
-            rating: 5,
-            comment: '麻辣香锅味道超赞，每次来必点！',
-            date: '2023-03-15'
-          },
-          {
-            id: 2,
-            username: '李四',
-            rating: 4,
-            comment: '水煮鱼很新鲜，就是有点辣，不过瘾！',
-            date: '2023-03-10'
-          }
-        ],
-        relatedBlogs: [
-          {
-            id: 1,
-            title: '探秘学一食堂川湘风味：麻辣诱惑无法抵挡',
-            author: '美食探险家',
-            summary: '详细介绍了川湘风味的招牌菜和就餐体验。',
-            date: '2023-02-28',
-            views: 1200
-          },
-          {
-            id: 2,
-            title: '在食堂也能吃到正宗水煮鱼！',
-            author: '吃货小分队',
-            summary: '分享了水煮鱼的口味和如何选择配菜的心得。',
-            date: '2023-03-05',
-            views: 850
-          }
-        ]
-      },
-      parentCanteenId: null // 用于返回食堂详情页
+      window: null,
+      parentCanteenId: null, // 用于返回食堂详情页
+      // 模拟所有窗口的数据，实际应用中这些数据会从后端API获取
+      allWindowsData: [
+        {
+          id: 1,
+          name: '川湘风味',
+          specialty: '麻辣香锅',
+          imageUrl: 'https://via.placeholder.com/600x400?text=川湘风味窗口',
+          rating: 4.8,
+          averagePrice: 18,
+          description: '以麻辣香锅为主打，提供地道川味体验。',
+          dishes: [
+            {
+              id: 1,
+              name: '麻辣香锅',
+              imageUrl: 'https://via.placeholder.com/300x200?text=麻辣香锅',
+              rating: 4.8,
+              price: 18,
+              description: '麻辣鲜香，配料丰富，口感独特。',
+              tags: ['招牌菜', '麻辣', '特色']
+            },
+            {
+              id: 2,
+              name: '水煮鱼',
+              imageUrl: 'https://via.placeholder.com/300x200?text=水煮鱼',
+              rating: 4.6,
+              price: 22,
+              description: '鱼肉鲜嫩，麻辣可口，配菜丰富。',
+              tags: ['川菜', '麻辣', '鱼类']
+            }
+          ],
+          reviews: [
+            {
+              id: 1,
+              username: '张三',
+              rating: 5,
+              comment: '麻辣香锅非常地道，辣度适中！',
+              date: '2023-03-15'
+            },
+            {
+              id: 2,
+              username: '李四',
+              rating: 4,
+              comment: '水煮鱼很新鲜，就是有点辣。',
+              date: '2023-03-18'
+            }
+          ],
+          relatedBlogs: []
+        },
+        {
+          id: 2,
+          name: '北方面食',
+          specialty: '手工拉面',
+          imageUrl: 'https://via.placeholder.com/600x400?text=北方面食窗口',
+          rating: 4.7,
+          averagePrice: 15,
+          description: '提供传统北方手工面食，口感劲道，面条筋道，汤头鲜美。',
+          dishes: [
+            {
+              id: 3,
+              name: '牛肉拉面',
+              imageUrl: 'https://via.placeholder.com/300x200?text=牛肉拉面',
+              rating: 4.7,
+              price: 15,
+              description: '手工拉制面条，配以清炖牛肉，汤鲜味美。',
+              tags: ['招牌菜', '面食', '牛肉']
+            }
+          ],
+          reviews: [
+            {
+              id: 3,
+              username: '王五',
+              rating: 5,
+              comment: '拉面味道很棒，汤汁浓郁！',
+              date: '2023-03-20'
+            }
+          ],
+          relatedBlogs: []
+        },
+        {
+          id: 3,
+          name: '粤式茶点',
+          specialty: '虾饺皇',
+          imageUrl: 'https://via.placeholder.com/600x400?text=粤式茶点窗口',
+          rating: 4.9,
+          averagePrice: 20,
+          description: '精致粤式茶点，品味岭南风情，早茶优选。',
+          dishes: [
+            {
+              id: 4,
+              name: '虾饺皇',
+              imageUrl: 'https://via.placeholder.com/300x200?text=虾饺皇',
+              rating: 4.9,
+              price: 16,
+              description: '晶莹剔透的虾饺，内馅鲜嫩多汁。',
+              tags: ['招牌菜', '点心', '海鲜']
+            }
+          ],
+          reviews: [
+            {
+              id: 4,
+              username: '赵六',
+              rating: 4,
+              comment: '虾饺很好吃，就是有点小贵。',
+              date: '2023-03-22'
+            }
+          ],
+          relatedBlogs: []
+        }
+      ]
     }
   },
   created() {
     // 获取窗口ID和父级食堂ID
-    const windowId = this.$route.query.windowId;
-    this.parentCanteenId = this.$route.query.canteenId;
+    const windowId = this.$route.params.windowId || this.$route.query.windowId;
+    this.parentCanteenId = this.$route.params.canteenId || this.$route.query.canteenId;
+
+    console.log('WindowsList.vue: 路由信息 = ', this.$route);
+    console.log('WindowsList.vue: params = ', this.$route.params);
+    console.log('WindowsList.vue: query = ', this.$route.query);
+    console.log('WindowsList.vue: 接收到的 windowId = ', windowId);
+    console.log('WindowsList.vue: 接收到的 canteenId = ', this.parentCanteenId);
 
     if (windowId) {
-      // 实际应用中，这里会根据windowId调用API获取窗口的详细数据
-      // 暂时使用示例数据，并根据windowId模拟加载
-      // 假设你有一个方法可以从某个数据源根据ID获取窗口数据
       this.loadWindowData(windowId);
     } else {
       this.$message.error('未找到窗口信息');
@@ -192,20 +233,24 @@ export default {
   },
   methods: {
     loadWindowData(windowId) {
-      // 模拟根据windowId加载数据
-      // 在实际项目中，你会在这里发起API请求
-      // 为了演示，我们直接使用data中的示例window数据
       console.log('加载窗口ID为：', windowId, '的数据');
-      // 如果你的后端API能够根据windowId获取数据，这里会是axios.get('/api/windows/' + windowId)
-      // 假设我们有多个窗口数据，你需要根据windowId找到对应的窗口
-      // 例如：
-      // const allWindowsData = [
-      //   { id: 1, name: '川湘风味', ... },
-      //   { id: 2, name: '北方面食', ... }
-      // ];
-      // this.window = allWindowsData.find(w => w.id == windowId);
-      // 目前为了快速演示，直接使用一个固定的window数据
-      // 如果需要模拟不同窗口的数据，可以在data中定义一个窗口数组，然后在这里查找
+      console.log('windowId的类型：', typeof windowId);
+      console.log('allWindowsData:', this.allWindowsData);
+      
+      // 将windowId转换为数字类型进行比较
+      const foundWindow = this.allWindowsData.find(w => w.id === Number(windowId));
+      console.log('找到的窗口：', foundWindow);
+      
+      if (foundWindow) {
+        this.window = foundWindow;
+        // 设置默认选中的窗口，如果需要的话 (例如，如果这里有tabs)
+        if (this.window.dishes && this.window.dishes.length > 0) {
+          this.activeWindow = this.window.dishes[0].name;
+        }
+      } else {
+        this.$message.error('未找到窗口信息');
+        this.$router.push({ name: 'canteenslist' });
+      }
     }
   }
 }

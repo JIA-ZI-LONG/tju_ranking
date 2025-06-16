@@ -43,32 +43,30 @@
 
     <!-- 窗口和菜品展示 -->
     <div class="windows-section">
-      <el-tabs v-model="activeWindow" type="card">
-        <el-tab-pane
-          v-for="window in canteen.windows"
-          :key="window.name"
-          :label="window.name"
-          :name="window.name">
-          <div class="window-info-container">
-            <el-card class="window-card" :body-style="{ padding: '0px' }" @click.native="goToWindowDetails(window)">
-              <img :src="window.imageUrl" :alt="window.name" class="window-image">
-              <div class="window-content">
-                <h3 class="window-name-card">{{ window.name }}</h3>
-                <div class="window-rating">
-                  <el-rate
-                    v-model="window.rating"
-                    disabled
-                    :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
-                    show-score>
-                  </el-rate>
-                  <span class="window-price">人均 ¥{{ window.averagePrice }}</span>
-                </div>
-                <p class="window-specialty-description">{{ window.specialty }} - {{ window.description }}</p>
+      <div class="window-cards-wrapper">
+        <!--原生html元素，不能用click.native-->
+        <div class="window-info-container"
+             v-for="window in canteen.windows"
+             :key="window.name"
+             @click="goToWindowDetails(window)">
+          <el-card class="window-card" :body-style="{ padding: '0px' }">
+            <img :src="window.imageUrl" :alt="window.name" class="window-image">
+            <div class="window-content">
+              <h3 class="window-name-card">{{ window.name }}</h3>
+              <div class="window-rating">
+                <el-rate
+                  v-model="window.rating"
+                  disabled
+                  :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
+                  show-score>
+                </el-rate>
+                <span class="window-price">人均 ¥{{ window.averagePrice }}</span>
               </div>
-            </el-card>
-          </div>
-        </el-tab-pane>
-      </el-tabs>
+              <p class="window-specialty-description">{{ window.specialty }} - {{ window.description }}</p>
+            </div>
+          </el-card>
+        </div>
+      </div>
     </div>
   </div>
 </template>
@@ -78,7 +76,6 @@ export default {
   name: 'CanteenDetails',
   data() {
     return {
-      activeWindow: '',
       canteen: {
         id: 1,
         name: '学一食堂',
@@ -91,6 +88,7 @@ export default {
         description: '天津大学最受欢迎的食堂之一，提供多样化的菜品选择，环境整洁，价格实惠。',
         windows: [
           {
+            id:1,
             name: '川湘风味',
             specialty: '麻辣香锅',
             imageUrl: 'https://via.placeholder.com/300x200?text=川湘风味',
@@ -99,6 +97,7 @@ export default {
             description: '以麻辣香锅为主打，提供地道川味体验。'
           },
           {
+            id:2,
             name: '北方面食',
             specialty: '手工拉面',
             imageUrl: 'https://via.placeholder.com/300x200?text=北方面食',
@@ -107,6 +106,7 @@ export default {
             description: '提供传统北方手工面食，口感劲道。'
           },
           {
+            id:3,
             name: '粤式茶点',
             specialty: '虾饺皇',
             imageUrl: 'https://via.placeholder.com/300x200?text=粤式茶点',
@@ -146,6 +146,7 @@ export default {
         description: '天津大学最受欢迎的食堂之一，提供多样化的菜品选择，环境整洁，价格实惠。',
         windows: [
           {
+            id: 1,
             name: '川湘风味',
             specialty: '麻辣香锅',
             imageUrl: 'https://via.placeholder.com/300x200?text=川湘风味',
@@ -154,6 +155,7 @@ export default {
             description: '以麻辣香锅为主打，提供地道川味体验。'
           },
           {
+            id: 2,
             name: '北方面食',
             specialty: '手工拉面',
             imageUrl: 'https://via.placeholder.com/300x200?text=北方面食',
@@ -162,6 +164,7 @@ export default {
             description: '提供传统北方手工面食，口感劲道。'
           },
           {
+            id: 3,
             name: '粤式茶点',
             specialty: '虾饺皇',
             imageUrl: 'https://via.placeholder.com/300x200?text=粤式茶点',
@@ -172,18 +175,13 @@ export default {
         ]
       }
       this.canteen = canteenData
-      // 设置默认选中的窗口
-      if (this.canteen.windows.length > 0) {
-        this.activeWindow = this.canteen.windows[0].name
-      }
     },
     goToWindowDetails(window) {
+      console.log('跳转到窗口详情，完整window对象:', window);
+      console.log('跳转到窗口详情，windowId:', window.id);
+      console.log('跳转到窗口详情，canteenId:', this.canteen.id);
       this.$router.push({
-        name: 'windowdetails',
-        query: {
-          windowId: window.id,
-          canteenId: this.canteen.id // 传递父级食堂ID
-        }
+        path: `/main/user/window-details/${window.id}/${this.canteen.id}`
       });
     }
   }
@@ -264,14 +262,21 @@ export default {
   margin-top: 30px;
 }
 
+.window-cards-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px; /* Space between cards */
+  justify-content: center; /* Center the cards if there are few */
+  padding: 20px 0; /* Consistent padding */
+}
+
 .window-info-container {
-  padding: 20px 0;
-  display: flex; /* 使用flexbox布局 */
-  justify-content: center; /* 居中显示 */
+  padding: 0; /* Remove padding from here */
+  /* Remove display:flex and justify-content:center if it was here for single card */
 }
 
 .window-card {
-  width: 300px; /* 固定卡片宽度 */
+  width: 300px; /* Fixed card width */
   border-radius: 8px;
   overflow: hidden;
   box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);

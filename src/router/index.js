@@ -76,8 +76,8 @@ export default new Router({
           meta: { requiresAuth: false }
         },
         {
-          path: 'user/window-details',
-          name: 'windowdetails', // 你可以自定义路由名称
+          path: 'user/window-details/:windowId/:canteenId',
+          name: 'windowdetails',
           component: () => import(/* webpackChunkName: "user-window-details" */ '../views/user/WindowsList.vue'),
           meta: { requiresAuth: false }
         }
