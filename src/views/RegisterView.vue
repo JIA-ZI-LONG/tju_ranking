@@ -7,18 +7,13 @@
       <el-form :model="registerForm" :rules="rules" ref="registerForm" label-width="80px" size="small">
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="用户名" prop="username">
-              <el-input v-model="registerForm.username" placeholder="请输入用户名" prefix-icon="el-icon-user"></el-input>
+            <el-form-item label="昵称" prop="nickname">
+              <el-input v-model="registerForm.nickname" placeholder="请输入昵称" prefix-icon="el-icon-user"></el-input>
             </el-form-item>
           </el-col>
           <el-col :span="12">
             <el-form-item label="邮箱" prop="email">
-              <div class="email-input">
-                <el-input v-model="registerForm.email" placeholder="请输入邮箱" prefix-icon="el-icon-message"></el-input>
-                <el-button type="primary" size="small" @click="sendVerificationCode" :disabled="codeButtonDisabled">
-                  {{ codeButtonText }}
-                </el-button>
-              </div>
+              <el-input v-model="registerForm.email" placeholder="请输入邮箱" prefix-icon="el-icon-message"></el-input>
             </el-form-item>
           </el-col>
         </el-row>
@@ -36,12 +31,32 @@
           </el-col>
         </el-row>
 
+        <!-- 图形验证码 -->
         <el-row :gutter="20">
           <el-col :span="12">
-            <el-form-item label="验证码" prop="code">
-              <el-input v-model="registerForm.code" placeholder="请输入验证码" prefix-icon="el-icon-key"></el-input>
+            <el-form-item label="图形验证码" prop="captchaCode">
+              <div class="captcha-input">
+                <el-input v-model="registerForm.captchaCode" placeholder="请输入图形验证码" prefix-icon="el-icon-key"></el-input>
+                <div class="captcha-image" @click="getCaptcha" v-if="captchaImage">
+                  <img :src="captchaImage" alt="验证码" style="cursor: pointer; height: 32px;">
+                </div>
+                <el-button v-else type="primary" size="small" @click="getCaptcha">获取验证码</el-button>
+              </div>
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="邮箱验证码" prop="code">
+              <div class="email-code-input">
+                <el-input v-model="registerForm.code" placeholder="请输入邮箱验证码" prefix-icon="el-icon-message"></el-input>
+                <el-button type="primary" size="small" @click="sendVerificationCode" :disabled="codeButtonDisabled">
+                  {{ codeButtonText }}
+                </el-button>
+              </div>
+            </el-form-item>
+          </el-col>
+        </el-row>
+
+        <el-row :gutter="20">
           <el-col :span="12">
             <el-form-item label="性别" prop="gender">
               <el-radio-group v-model="registerForm.gender">
@@ -51,14 +66,17 @@
               </el-radio-group>
             </el-form-item>
           </el-col>
+          <el-col :span="12">
+            <el-form-item label="校区" prop="campus">
+              <el-select v-model="registerForm.campus" placeholder="请选择校区" style="width: 100%">
+                <el-option label="北洋园校区" value="北洋园校区"></el-option>
+                <el-option label="卫津路校区" value="卫津路校区"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-col>
         </el-row>
 
-        <el-form-item label="校区" prop="campus">
-          <el-select v-model="registerForm.campus" placeholder="请选择校区" style="width: 100%">
-            <el-option label="北洋园校区" value="北洋园校区"></el-option>
-            <el-option label="卫津路校区" value="卫津路校区"></el-option>
-          </el-select>
-        </el-form-item>
+
 
         <el-form-item>
           <el-button type="primary" @click="submitForm('registerForm')">注册</el-button>
@@ -101,18 +119,20 @@ export default {
     }
     return {
       registerForm: {
-        username: '',
+        nickname: '',
         password: '',
         confirmPassword: '',
         email: '',
         code: '',
         gender: 2,
-        campus: ''
+        campus: '',
+        captchaCode: '',
+        captchaKey: ''
       },
       rules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
-          { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
+        nickname: [
+          { required: false, message: '请输入昵称', trigger: 'blur' },
+          { min: 2, max: 20, message: '长度在 2 到 20 个字符', trigger: 'blur' }
         ],
         password: [
           { required: true, validator: validatePass, trigger: 'blur' },
@@ -126,19 +146,25 @@ export default {
           { type: 'email', message: '请输入正确的邮箱地址', trigger: 'blur' }
         ],
         code: [
-          { required: true, message: '请输入验证码', trigger: 'blur' },
+          { required: true, message: '请输入邮箱验证码', trigger: 'blur' },
           { len: 6, message: '验证码长度应为6位', trigger: 'blur' }
         ],
+        captchaCode: [
+          { required: true, message: '请输入图形验证码', trigger: 'blur' }
+        ],
         gender: [
-          { required: true, message: '请选择性别', trigger: 'change' }
+          { required: false, message: '请选择性别', trigger: 'change' }
         ],
         campus: [
-          { required: true, message: '请选择校区', trigger: 'change' }
+          { required: false, message: '请选择校区', trigger: 'change' }
         ]
       },
       codeButtonText: '获取验证码',
       codeButtonDisabled: false,
-      countdown: 60
+      countdown: 60,
+      // 图形验证码相关
+      captchaImage: '',
+      captchaKey: ''
     }
   },
 
@@ -148,9 +174,9 @@ export default {
     verificationCodeModel() {
       return {
         email: this.registerForm.email,
-        type: 1 // 假设1代表注册的验证码类型，根据后端实际定义调整
-        // captchaKey: '', // 如果后端需要图形验证码，请在此处添加
-        // captchaCode: '' // 如果后端需要图形验证码，请在此处添加
+        type: 1,
+        captchaKey: this.registerForm.captchaKey,
+        captchaCode: this.registerForm.captchaCode
       }
     },
     registerModel() {
@@ -159,7 +185,7 @@ export default {
         password: this.registerForm.password,
         confirmPassword: this.registerForm.confirmPassword,
         code: this.registerForm.code,
-        nickname: this.registerForm.username,
+        nickname: this.registerForm.nickname,
         gender: this.registerForm.gender,
         campus: this.registerForm.campus
       }
@@ -169,14 +195,27 @@ export default {
 
 
   methods: {
+    // 获取图形验证码
+    getCaptcha() {
+      AccountServices.GetCaptcha()
+        .then(response => {
+          if (response.success) {
+            this.captchaImage = response.data.image
+            this.captchaKey = response.data.key
+            this.registerForm.captchaKey = response.data.key
+          } else {
+            this.$message.error('获取图形验证码失败')
+          }
+        })
+        .catch(error => {
+          console.error('获取图形验证码错误：', error)
+          this.$message.error('获取图形验证码失败')
+        })
+    },
     // 发送验证码
     sendVerificationCode() {
-      if (!this.registerForm.email) {
-        this.$message.warning('请先输入邮箱地址')
-        return
-      }
-      if (!this.registerForm.username) {
-        this.$message.warning('请先输入用户名')
+      if (!this.registerForm.email || !this.registerForm.captchaCode) {
+        this.$message.warning('请先输入邮箱地址和图形验证码')
         return
       }
 
@@ -187,11 +226,13 @@ export default {
             this.startCountdown()
           } else {
             this.$message.error(response.errorMsg || '发送验证码失败，请稍后重试')
+            this.getCaptcha()
           }
         })
         .catch(error => {
-          console.error('发送验证码请求错误：', error) // 调试用
+          console.error('发送验证码请求错误：', error)
           this.$message.error('发送验证码失败：' + (error.message || '网络错误或服务器无响应'))
+          this.getCaptcha()
         })
     },
     // 开始倒计时
@@ -212,29 +253,17 @@ export default {
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          // 检查用户名是否已存在
-          AccountServices.IsNameUsed(this.registerForm.username)
-            .then(nameCheck => {
-              if (nameCheck.data) {
-                this.$message.error('用户名已被使用')
-                return
-              }
-
-              // 调用注册接口
-              return AccountServices.Register(this.registerModel)
-            })
+          AccountServices.Register(this.registerModel)
             .then(response => {
               if (response.success) {
                 this.$message.success('注册成功！')
-                // 注册成功后跳转到登录页
                 this.$router.push('/login')
               } else {
-                // 注册失败处理，显示后端返回的错误信息
                 this.$message.error(response.errorMsg || '注册失败，请稍后重试。')
               }
             })
             .catch(error => {
-              console.error('注册请求错误：', error) // 调试用
+              console.error('注册请求错误：', error)
               this.$message.error('注册失败：' + (error.message || '网络错误或服务器无响应。'))
             })
         } else {

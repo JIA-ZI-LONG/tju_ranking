@@ -24,8 +24,8 @@ export default new Vuex.Store({
     },
   },
   actions: {
-    login({ commit }, token, username) {
-      commit('setToken', token, username);
+    login({ commit }, { token, username }) {
+      commit('setToken', { token, username });
     },
     logout({ commit }) {
       commit('removeToken');

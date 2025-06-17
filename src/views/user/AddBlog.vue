@@ -10,9 +10,11 @@
       <el-form-item label="位置" prop="location">
         <el-cascader
           v-model="blogForm.location"
-          :options="locationOptions"
+          :options="locationModel"
+          :props="{ checkStrictly: true }"
           placeholder="请选择食堂和窗口"
-        ></el-cascader>
+          :loading="!locationModel.length">
+        </el-cascader>
       </el-form-item>
 
       <!-- 图片上传 -->
@@ -80,18 +82,22 @@
 
       <!-- 提交按钮 -->
       <el-form-item>
-        <el-button type="primary" @click="submitForm">发布</el-button>
-        <el-button @click="resetForm">重置</el-button>
+        <el-button type="primary" @click="submitForm" :loading="loading">发布</el-button>
+        <el-button @click="resetForm" :disabled="loading">重置</el-button>
       </el-form-item>
     </el-form>
   </div>
 </template>
 
 <script>
+import BlogServices from '@/service/BlogServices'
+import CanteenServices from '@/service/CanteenServices'
+
 export default {
   name: 'AddBlog',
   data() {
     return {
+      loading: false,
       blogForm: {
         title: '',
         location: [],
@@ -102,32 +108,7 @@ export default {
         tags: [],
         date: new Date().toISOString().split('T')[0]
       },
-      locationOptions: [
-        {
-          value: '学一食堂',
-          label: '学一食堂',
-          children: [
-            { value: '一楼', label: '一楼' },
-            { value: '二楼', label: '二楼' }
-          ]
-        },
-        {
-          value: '学二食堂',
-          label: '学二食堂',
-          children: [
-            { value: '一楼', label: '一楼' },
-            { value: '二楼', label: '二楼' }
-          ]
-        },
-        {
-          value: '学三食堂',
-          label: '学三食堂',
-          children: [
-            { value: '一楼', label: '一楼' },
-            { value: '二楼', label: '二楼' }
-          ]
-        }
-      ],
+      locationOptions: [],
       tagOptions: ['美食', '实惠', '环境好', '服务好', '排队少', '特色菜'],
       rules: {
         title: [
@@ -147,9 +128,59 @@ export default {
       }
     }
   },
+  computed: {
+    blogModel() {
+      const [canteenId, stallId] = this.blogForm.location
+      return {
+        title: this.blogForm.title,
+        content: this.blogForm.content,
+        imageUrl: this.blogForm.imageUrl,
+        rating: this.blogForm.rating,
+        price: this.blogForm.price,
+        tags: this.blogForm.tags,
+        canteenId,
+        stallId,
+        date: this.blogForm.date
+      }
+    },
+    locationModel() {
+      return this.locationOptions.map(canteen => ({
+        value: canteen.id,
+        label: canteen.name,
+        children: canteen.stalls.map(stall => ({
+          value: stall.id,
+          label: stall.name
+        }))
+      }))
+    }
+  },
+  created() {
+    this.loadLocationOptions()
+  },
   methods: {
-    handleUploadSuccess(res, file) {
-      this.blogForm.imageUrl = URL.createObjectURL(file.raw)
+    loadLocationOptions() {
+      this.loading = true
+      CanteenServices.GetAllCanteens()
+        .then(response => {
+          if (!response.success || !response.data) {
+            throw new Error(response.errorMsg || '获取位置信息失败')
+          }
+          this.locationOptions = response.data
+        })
+        .catch(error => {
+          console.error('获取位置信息失败:', error)
+          this.$message.error('获取位置信息失败：' + (error.message || '网络错误'))
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    handleUploadSuccess(res) {
+      if (!res.success || !res.data?.url) {
+        throw new Error(res.errorMsg || '图片上传失败')
+      }
+      this.blogForm.imageUrl = res.data.url
+      this.$message.success('图片上传成功')
     },
     beforeUpload(file) {
       const isImage = file.type.startsWith('image/')
@@ -167,19 +198,32 @@ export default {
     },
     submitForm() {
       this.$refs.blogForm.validate((valid) => {
-        if (valid) {
-          // TODO: 调用API保存博客
-          console.log('提交的表单数据:', this.blogForm)
-          this.$message.success('发布成功！')
-          this.$router.push('/user/blogs')
-        } else {
+        if (!valid) {
           this.$message.error('请完善必填信息！')
           return false
         }
+
+        this.loading = true
+        BlogServices.CreateBlog(this.blogModel)
+          .then(response => {
+            if (!response.success) {
+              throw new Error(response.errorMsg || '发布失败')
+            }
+            this.$message.success('发布成功！')
+            this.$router.push('/main/user/blogslist')
+          })
+          .catch(error => {
+            console.error('发布博客失败:', error)
+            this.$message.error('发布失败：' + (error.message || '网络错误'))
+          })
+          .finally(() => {
+            this.loading = false
+          })
       })
     },
     resetForm() {
       this.$refs.blogForm.resetFields()
+      this.blogForm.imageUrl = ''
     }
   }
 }

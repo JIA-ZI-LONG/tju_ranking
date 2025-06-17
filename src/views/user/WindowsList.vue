@@ -5,252 +5,250 @@
       <el-button icon="el-icon-arrow-left" @click="$router.push({ name: 'canteendetails', query: { id: parentCanteenId } })">返回食堂详情</el-button>
     </div>
 
-    <!-- 窗口简介卡片 -->
-    <el-card class="window-intro-card" :body-style="{ padding: '0px' }">
-      <img :src="window.imageUrl" :alt="window.name" class="window-image-intro">
-      <div class="window-content-intro">
-        <h1 class="window-name-intro">{{ window.name }}</h1>
-        <div class="window-rating-intro">
-          <el-rate
-            v-model="window.rating"
-            disabled
-            :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
-            show-score>
-          </el-rate>
-          <span class="window-price-intro">人均 ¥{{ window.averagePrice }}</span>
-        </div>
-        <p class="window-specialty-intro">特色：{{ window.specialty }}</p>
-        <p class="window-description-intro">{{ window.description }}</p>
-      </div>
-    </el-card>
-
-    <!-- 窗口内所有菜品 -->
-    <div class="section-title">窗口菜品</div>
-    <div class="dishes-container">
-      <el-card
-        v-for="dish in window.dishes"
-        :key="dish.id"
-        class="dish-card"
-        :body-style="{ padding: '0px' }">
-        <div class="dish-image">
-          <img :src="dish.imageUrl" :alt="dish.name">
-        </div>
-        <div class="dish-info">
-          <h3 class="dish-name">{{ dish.name }}</h3>
-          <div class="dish-rating">
-            <el-rate
-              v-model="dish.rating"
-              disabled
-              :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
-              show-score>
-            </el-rate>
-            <span class="dish-price">¥{{ dish.price }}</span>
-          </div>
-          <p class="dish-description">{{ dish.description }}</p>
-          <div class="dish-tags">
-            <el-tag
-              v-for="tag in dish.tags"
-              :key="tag"
-              size="small"
-              type="info">
-              {{ tag }}
-            </el-tag>
+    <el-skeleton :loading="loading" animated>
+      <template slot="template">
+        <div style="padding: 20px">
+          <el-skeleton-item variant="image" style="width: 100%; height: 300px" />
+          <div style="padding: 20px">
+            <el-skeleton-item variant="h1" style="width: 50%" />
+            <div style="display: flex; align-items: center; margin-top: 20px">
+              <el-skeleton-item variant="text" style="margin-right: 16px" />
+              <el-skeleton-item variant="text" style="width: 30%" />
+            </div>
           </div>
         </div>
-      </el-card>
-    </div>
+      </template>
+      <template>
+        <!-- 窗口简介卡片 -->
+        <el-card v-if="windowModel" class="window-intro-card" :body-style="{ padding: '0px' }">
+          <img :src="windowModel.imageUrl" :alt="windowModel.name" class="window-image-intro">
+          <div class="window-content-intro">
+            <h1 class="window-name-intro">{{ windowModel.name }}</h1>
+            <div class="window-rating-intro">
+              <el-rate
+                v-model="windowModel.rating"
+                disabled
+                :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
+                show-score>
+              </el-rate>
+              <span class="window-price-intro">人均 ¥{{ windowModel.averagePrice }}</span>
+            </div>
+            <p class="window-specialty-intro">特色：{{ windowModel.specialty }}</p>
+            <p class="window-description-intro">{{ windowModel.description }}</p>
+          </div>
+        </el-card>
 
-    <!-- 用户评价 -->
-    <div class="section-title">用户评价</div>
-    <div class="reviews-container">
-      <el-card v-for="review in window.reviews" :key="review.id" class="review-card">
-        <div class="review-header">
-          <span class="username">{{ review.username }}</span>
-          <el-rate v-model="review.rating" disabled></el-rate>
+        <!-- 窗口内所有菜品 -->
+        <div class="section-title">窗口菜品</div>
+        <div class="dishes-container">
+          <el-card
+            v-for="dish in dishesModel"
+            :key="dish.id"
+            class="dish-card"
+            :body-style="{ padding: '0px' }">
+            <div class="dish-image">
+              <img :src="dish.imageUrl" :alt="dish.name">
+            </div>
+            <div class="dish-info">
+              <h3 class="dish-name">{{ dish.name }}</h3>
+              <div class="dish-rating">
+                <el-rate
+                  v-model="dish.rating"
+                  disabled
+                  :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
+                  show-score>
+                </el-rate>
+                <span class="dish-price">¥{{ dish.price }}</span>
+              </div>
+              <p class="dish-description">{{ dish.description }}</p>
+              <div class="dish-tags">
+                <el-tag
+                  v-for="tag in dish.tags"
+                  :key="tag"
+                  size="small"
+                  type="info">
+                  {{ tag }}
+                </el-tag>
+              </div>
+            </div>
+          </el-card>
         </div>
-        <div class="review-content">
-          <p>{{ review.comment }}</p>
-          <span class="review-date">{{ review.date }}</span>
-        </div>
-      </el-card>
-      <div v-if="window.reviews.length === 0" class="no-data-tip">暂无用户评价</div>
-    </div>
 
-    <!-- 相关博客 -->
-    <div class="section-title">相关博客</div>
-    <div class="related-blogs-container">
-      <el-card v-for="blog in window.relatedBlogs" :key="blog.id" class="blog-card">
-        <div class="blog-header">
-          <h3 class="blog-title">{{ blog.title }}</h3>
-          <span class="blog-author">{{ blog.author }}</span>
+        <!-- 用户评价 -->
+        <div class="section-title">用户评价</div>
+        <div class="reviews-container">
+          <el-card v-for="review in reviewsModel" :key="review.id" class="review-card">
+            <div class="review-header">
+              <span class="username">{{ review.username }}</span>
+              <el-rate v-model="review.rating" disabled></el-rate>
+            </div>
+            <div class="review-content">
+              <p>{{ review.comment }}</p>
+              <span class="review-date">{{ review.date }}</span>
+            </div>
+          </el-card>
+          <div v-if="reviewsModel.length === 0" class="no-data-tip">暂无用户评价</div>
         </div>
-        <p class="blog-summary">{{ blog.summary }}</p>
-        <div class="blog-meta">
-          <span>{{ blog.date }}</span>
-          <span>{{ blog.views }} 阅读</span>
+
+        <!-- 相关博客 -->
+        <div class="section-title">相关博客</div>
+        <div class="related-blogs-container">
+          <el-card v-for="blog in relatedBlogsModel" :key="blog.id" class="blog-card">
+            <div class="blog-header">
+              <h3 class="blog-title">{{ blog.title }}</h3>
+              <span class="blog-author">{{ blog.author }}</span>
+            </div>
+            <p class="blog-summary">{{ blog.summary }}</p>
+            <div class="blog-meta">
+              <span>{{ blog.date }}</span>
+              <span>{{ blog.views }} 阅读</span>
+            </div>
+          </el-card>
+          <div v-if="relatedBlogsModel.length === 0" class="no-data-tip">暂无相关博客</div>
         </div>
-      </el-card>
-      <div v-if="window.relatedBlogs.length === 0" class="no-data-tip">暂无相关博客</div>
-    </div>
+      </template>
+    </el-skeleton>
   </div>
 </template>
 
 <script>
+import StallServices from '@/service/StallServices'
+import DishServices from '@/service/DishServices'
+import ReviewServices from '@/service/ReviewServices'
+
 export default {
-  name: 'WindowDetails', // 内部组件名称
+  name: 'WindowDetails',
   data() {
     return {
-      window: null,
-      parentCanteenId: null, // 用于返回食堂详情页
-      // 模拟所有窗口的数据，实际应用中这些数据会从后端API获取
-      allWindowsData: [
-        {
-          id: 1,
-          name: '川湘风味',
-          specialty: '麻辣香锅',
-          imageUrl: 'https://via.placeholder.com/600x400?text=川湘风味窗口',
-          rating: 4.8,
-          averagePrice: 18,
-          description: '以麻辣香锅为主打，提供地道川味体验。',
-          dishes: [
-            {
-              id: 1,
-              name: '麻辣香锅',
-              imageUrl: 'https://via.placeholder.com/300x200?text=麻辣香锅',
-              rating: 4.8,
-              price: 18,
-              description: '麻辣鲜香，配料丰富，口感独特。',
-              tags: ['招牌菜', '麻辣', '特色']
-            },
-            {
-              id: 2,
-              name: '水煮鱼',
-              imageUrl: 'https://via.placeholder.com/300x200?text=水煮鱼',
-              rating: 4.6,
-              price: 22,
-              description: '鱼肉鲜嫩，麻辣可口，配菜丰富。',
-              tags: ['川菜', '麻辣', '鱼类']
-            }
-          ],
-          reviews: [
-            {
-              id: 1,
-              username: '张三',
-              rating: 5,
-              comment: '麻辣香锅非常地道，辣度适中！',
-              date: '2023-03-15'
-            },
-            {
-              id: 2,
-              username: '李四',
-              rating: 4,
-              comment: '水煮鱼很新鲜，就是有点辣。',
-              date: '2023-03-18'
-            }
-          ],
-          relatedBlogs: []
-        },
-        {
-          id: 2,
-          name: '北方面食',
-          specialty: '手工拉面',
-          imageUrl: 'https://via.placeholder.com/600x400?text=北方面食窗口',
-          rating: 4.7,
-          averagePrice: 15,
-          description: '提供传统北方手工面食，口感劲道，面条筋道，汤头鲜美。',
-          dishes: [
-            {
-              id: 3,
-              name: '牛肉拉面',
-              imageUrl: 'https://via.placeholder.com/300x200?text=牛肉拉面',
-              rating: 4.7,
-              price: 15,
-              description: '手工拉制面条，配以清炖牛肉，汤鲜味美。',
-              tags: ['招牌菜', '面食', '牛肉']
-            }
-          ],
-          reviews: [
-            {
-              id: 3,
-              username: '王五',
-              rating: 5,
-              comment: '拉面味道很棒，汤汁浓郁！',
-              date: '2023-03-20'
-            }
-          ],
-          relatedBlogs: []
-        },
-        {
-          id: 3,
-          name: '粤式茶点',
-          specialty: '虾饺皇',
-          imageUrl: 'https://via.placeholder.com/600x400?text=粤式茶点窗口',
-          rating: 4.9,
-          averagePrice: 20,
-          description: '精致粤式茶点，品味岭南风情，早茶优选。',
-          dishes: [
-            {
-              id: 4,
-              name: '虾饺皇',
-              imageUrl: 'https://via.placeholder.com/300x200?text=虾饺皇',
-              rating: 4.9,
-              price: 16,
-              description: '晶莹剔透的虾饺，内馅鲜嫩多汁。',
-              tags: ['招牌菜', '点心', '海鲜']
-            }
-          ],
-          reviews: [
-            {
-              id: 4,
-              username: '赵六',
-              rating: 4,
-              comment: '虾饺很好吃，就是有点小贵。',
-              date: '2023-03-22'
-            }
-          ],
-          relatedBlogs: []
-        }
-      ]
+      windowData: null,
+      parentCanteenId: null,
+      dishesData: [],
+      reviewsData: [],
+      loading: false,
+      currentPage: 1,
+      pageSize: 10,
+      total: 0
+    }
+  },
+  computed: {
+    windowModel() {
+      if (!this.windowData) return null
+      return {
+        id: this.windowData.id,
+        name: this.windowData.name,
+        imageUrl: this.windowData.imageUrl || '/default-window-image.jpg',
+        rating: this.windowData.score || 0,
+        averagePrice: this.windowData.averagePrice || 0,
+        specialty: this.windowData.specialty || '暂无特色',
+        description: this.windowData.description || '暂无描述',
+        dishes: this.dishesModel,
+        reviews: this.reviewsModel,
+        relatedBlogs: this.relatedBlogsModel
+      }
+    },
+    dishesModel() {
+      return this.dishesData.map(dish => ({
+        id: dish.id,
+        name: dish.name,
+        imageUrl: dish.imageUrl || '/default-dish-image.jpg',
+        rating: dish.score || 0,
+        price: dish.price || 0,
+        description: dish.description || '暂无描述',
+        tags: dish.tags || []
+      }))
+    },
+    reviewsModel() {
+      return this.reviewsData.map(review => ({
+        id: review.id,
+        username: review.user?.nickname || '匿名用户',
+        rating: review.score || 0,
+        comment: review.content || '',
+        date: this.formatDate(review.createTime)
+      }))
+    },
+    relatedBlogsModel() {
+      return (this.windowData?.relatedBlogs || []).map(blog => ({
+        id: blog.id,
+        title: blog.title,
+        author: blog.authorName || '匿名用户',
+        summary: this.extractSummary(blog.content),
+        date: this.formatDate(blog.createTime),
+        views: blog.views || 0
+      }))
     }
   },
   created() {
-    // 获取窗口ID和父级食堂ID
-    const windowId = this.$route.params.windowId || this.$route.query.windowId;
-    this.parentCanteenId = this.$route.params.canteenId || this.$route.query.canteenId;
-
-    console.log('WindowsList.vue: 路由信息 = ', this.$route);
-    console.log('WindowsList.vue: params = ', this.$route.params);
-    console.log('WindowsList.vue: query = ', this.$route.query);
-    console.log('WindowsList.vue: 接收到的 windowId = ', windowId);
-    console.log('WindowsList.vue: 接收到的 canteenId = ', this.parentCanteenId);
+    const windowId = this.$route.params.windowId || this.$route.query.windowId
+    this.parentCanteenId = this.$route.params.canteenId || this.$route.query.canteenId
 
     if (windowId) {
-      this.loadWindowData(windowId);
+      this.loadWindowData(windowId)
     } else {
-      this.$message.error('未找到窗口信息');
-      this.$router.push({ name: 'canteenslist' }); // 如果没有windowId，返回食堂列表
+      this.$message.error('未找到窗口信息')
+      this.$router.push({ name: 'canteenslist' })
     }
   },
   methods: {
     loadWindowData(windowId) {
-      console.log('加载窗口ID为：', windowId, '的数据');
-      console.log('windowId的类型：', typeof windowId);
-      console.log('allWindowsData:', this.allWindowsData);
-      
-      // 将windowId转换为数字类型进行比较
-      const foundWindow = this.allWindowsData.find(w => w.id === Number(windowId));
-      console.log('找到的窗口：', foundWindow);
-      
-      if (foundWindow) {
-        this.window = foundWindow;
-        // 设置默认选中的窗口，如果需要的话 (例如，如果这里有tabs)
-        if (this.window.dishes && this.window.dishes.length > 0) {
-          this.activeWindow = this.window.dishes[0].name;
-        }
-      } else {
-        this.$message.error('未找到窗口信息');
-        this.$router.push({ name: 'canteenslist' });
-      }
+      this.loading = true
+      StallServices.GetStallById(windowId)
+        .then(response => {
+          if (response.success) {
+            this.windowData = response.data
+            this.loadDishes(windowId)
+            this.loadReviews(windowId)
+          } else {
+            this.$message.error(response.errorMsg || '获取窗口信息失败')
+          }
+        })
+        .catch(error => {
+          console.error('获取窗口信息失败:', error)
+          this.$message.error('获取窗口信息失败：' + (error.message || '网络错误'))
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
+    loadDishes(windowId) {
+      DishServices.SearchDishes({ stallId: windowId })
+        .then(response => {
+          if (response.success) {
+            this.dishesData = response.data || []
+          } else {
+            this.$message.error(response.errorMsg || '获取菜品列表失败')
+          }
+        })
+        .catch(error => {
+          console.error('获取菜品列表失败:', error)
+          this.$message.error('获取菜品列表失败：' + (error.message || '网络错误'))
+        })
+    },
+    loadReviews(windowId) {
+      ReviewServices.GetStallReviews(windowId, {
+        current: this.currentPage,
+        size: this.pageSize
+      })
+        .then(response => {
+          if (response.success) {
+            this.reviewsData = response.data || []
+            this.total = response.total || 0
+          } else {
+            this.$message.error(response.errorMsg || '获取评价列表失败')
+          }
+        })
+        .catch(error => {
+          console.error('获取评价列表失败:', error)
+          this.$message.error('获取评价列表失败：' + (error.message || '网络错误'))
+        })
+    },
+    formatDate(dateString) {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('zh-CN')
+    },
+    extractSummary(content) {
+      if (!content) return '暂无内容'
+      return content.length > 100 ? content.substring(0, 100) + '...' : content
     }
   }
 }

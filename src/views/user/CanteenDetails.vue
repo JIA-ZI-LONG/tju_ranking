@@ -1,53 +1,52 @@
 <template>
-  <div class="canteen-details-container">
+  <div class="canteen-details-container" v-loading="loading">
     <!-- 返回按钮 -->
     <div class="back-button">
       <el-button icon="el-icon-arrow-left" @click="$router.push({ name: 'canteenslist' })">返回食堂列表</el-button>
     </div>
 
     <!-- 食堂简介卡片 -->
-    <el-card class="canteen-intro-card">
+    <el-card class="canteen-intro-card" v-if="canteenModel">
       <div class="intro-header">
         <div class="intro-left">
-          <h1 class="canteen-name">{{ canteen.name }}</h1>
+          <h1 class="canteen-name">{{ canteenModel.name }}</h1>
           <div class="canteen-tags">
-            <el-tag size="medium" type="info">{{ canteen.campus }}</el-tag>
-            <el-tag size="medium" type="success" v-if="canteen.isOpen">营业中</el-tag>
+            <el-tag size="medium" type="info">{{ canteenModel.campus }}</el-tag>
+            <el-tag size="medium" type="success" v-if="canteenModel.isOpen">营业中</el-tag>
             <el-tag size="medium" type="danger" v-else>已关闭</el-tag>
           </div>
         </div>
         <div class="intro-right">
           <div class="rating-price">
             <el-rate
-              v-model="canteen.rating"
+              v-model="canteenModel.rating"
               disabled
               :colors="['#99A9BF', '#F7BA2A', '#FF9900']"
               show-score>
             </el-rate>
-            <span class="average-price">人均 ¥{{ canteen.averagePrice }}</span>
+            <span class="average-price">人均 ¥{{ canteenModel.averagePrice }}</span>
           </div>
           <div class="business-hours">
             <i class="el-icon-time"></i>
-            <span>{{ canteen.businessHours }}</span>
+            <span>{{ canteenModel.businessHours }}</span>
           </div>
           <div class="location">
             <i class="el-icon-location"></i>
-            <span>{{ canteen.location }}</span>
+            <span>{{ canteenModel.location }}</span>
           </div>
         </div>
       </div>
       <div class="intro-description">
-        <p>{{ canteen.description }}</p>
+        <p>{{ canteenModel.description }}</p>
       </div>
     </el-card>
 
     <!-- 窗口和菜品展示 -->
     <div class="windows-section">
       <div class="window-cards-wrapper">
-        <!--原生html元素，不能用click.native-->
         <div class="window-info-container"
-             v-for="window in canteen.windows"
-             :key="window.name"
+             v-for="window in windowsModel"
+             :key="window.id"
              @click="goToWindowDetails(window)">
           <el-card class="window-card" :body-style="{ padding: '0px' }">
             <img :src="window.imageUrl" :alt="window.name" class="window-image">
@@ -72,117 +71,94 @@
 </template>
 
 <script>
+import CanteenServices from '@/service/CanteenServices'
+import StallServices from '@/service/StallServices'
+
 export default {
   name: 'CanteenDetails',
   data() {
     return {
-      canteen: {
-        id: 1,
-        name: '学一食堂',
-        campus: '卫津路校区',
-        rating: 4.5,
-        averagePrice: 15,
-        isOpen: true,
-        businessHours: '06:30-22:00',
-        location: '卫津路校区中心位置',
-        description: '天津大学最受欢迎的食堂之一，提供多样化的菜品选择，环境整洁，价格实惠。',
-        windows: [
-          {
-            id:1,
-            name: '川湘风味',
-            specialty: '麻辣香锅',
-            imageUrl: 'https://via.placeholder.com/300x200?text=川湘风味',
-            rating: 4.8,
-            averagePrice: 18,
-            description: '以麻辣香锅为主打，提供地道川味体验。'
-          },
-          {
-            id:2,
-            name: '北方面食',
-            specialty: '手工拉面',
-            imageUrl: 'https://via.placeholder.com/300x200?text=北方面食',
-            rating: 4.7,
-            averagePrice: 15,
-            description: '提供传统北方手工面食，口感劲道。'
-          },
-          {
-            id:3,
-            name: '粤式茶点',
-            specialty: '虾饺皇',
-            imageUrl: 'https://via.placeholder.com/300x200?text=粤式茶点',
-            rating: 4.9,
-            averagePrice: 20,
-            description: '精致粤式茶点，品味岭南风情。'
-          }
-        ]
+      canteen: null,
+      loading: false,
+      canteenId: null
+    }
+  },
+  computed: {
+    canteenModel() {
+      if (!this.canteen) return null
+      return {
+        id: this.canteen.id,
+        name: this.canteen.name,
+        campus: this.canteen.campusName || '未知校区',
+        rating: this.canteen.score || 0,
+        averagePrice: this.canteen.avgPrice || 0,
+        isOpen: this.canteen.openStatus === 1,
+        businessHours: this.canteen.openHours || '营业时间未知',
+        location: this.canteen.address || '地址未知',
+        description: this.canteen.introduction || '暂无介绍'
       }
+    },
+    windowsModel() {
+      if (!this.canteen?.windows) return []
+      return this.canteen.windows.map(stall => ({
+        id: stall.id,
+        name: stall.name,
+        specialty: stall.specialty || '特色菜品',
+        imageUrl: stall.imageUrl || `https://via.placeholder.com/300x200?text=${encodeURIComponent(stall.name)}`,
+        rating: stall.score || 0,
+        averagePrice: stall.avgPrice || 0,
+        description: stall.introduction || '暂无介绍'
+      }))
     }
   },
   created() {
-    // 获取食堂ID
-    const canteenId = this.$route.query.id
-    if (canteenId) {
-      // 这里应该调用API获取食堂数据
-      // 暂时使用示例数据
-      this.loadCanteenData(canteenId)
+    this.canteenId = this.$route.query.id
+    if (this.canteenId) {
+      this.loadCanteenData()
     } else {
       this.$message.error('未找到食堂信息')
       this.$router.push({ name: 'canteenslist' })
     }
   },
   methods: {
-    loadCanteenData(canteenId) {
-      // 这里应该调用API获取食堂数据
-      // 暂时使用示例数据
-      const canteenData = {
-        id: canteenId,
-        name: '学一食堂',
-        campus: '卫津路校区',
-        rating: 4.5,
-        averagePrice: 15,
-        isOpen: true,
-        businessHours: '06:30-22:00',
-        location: '卫津路校区中心位置',
-        description: '天津大学最受欢迎的食堂之一，提供多样化的菜品选择，环境整洁，价格实惠。',
-        windows: [
-          {
-            id: 1,
-            name: '川湘风味',
-            specialty: '麻辣香锅',
-            imageUrl: 'https://via.placeholder.com/300x200?text=川湘风味',
-            rating: 4.8,
-            averagePrice: 18,
-            description: '以麻辣香锅为主打，提供地道川味体验。'
-          },
-          {
-            id: 2,
-            name: '北方面食',
-            specialty: '手工拉面',
-            imageUrl: 'https://via.placeholder.com/300x200?text=北方面食',
-            rating: 4.7,
-            averagePrice: 15,
-            description: '提供传统北方手工面食，口感劲道。'
-          },
-          {
-            id: 3,
-            name: '粤式茶点',
-            specialty: '虾饺皇',
-            imageUrl: 'https://via.placeholder.com/300x200?text=粤式茶点',
-            rating: 4.9,
-            averagePrice: 20,
-            description: '精致粤式茶点，品味岭南风情。'
+    loadCanteenData() {
+      this.loading = true
+      Promise.all([
+        CanteenServices.GetCanteenById(this.canteenId),
+        StallServices.GetStallsByCanteenId(this.canteenId)
+      ])
+        .then(([canteenResponse, stallsResponse]) => {
+          if (!canteenResponse.success || !canteenResponse.data) {
+            throw new Error(canteenResponse.errorMsg || '获取食堂信息失败')
           }
-        ]
-      }
-      this.canteen = canteenData
+
+          const canteenData = canteenResponse.data
+          this.canteen = {
+            ...canteenData,
+            windows: []
+          }
+
+          if (stallsResponse.success && stallsResponse.data) {
+            this.canteen.windows = Array.isArray(stallsResponse.data) ? stallsResponse.data : []
+          }
+        })
+        .catch(error => {
+          console.error('加载食堂详情失败：', error)
+          this.$message.error('加载食堂详情失败：' + (error.message || '网络错误'))
+          this.$router.push({ name: 'canteenslist' })
+        })
+        .finally(() => {
+          this.loading = false
+        })
     },
     goToWindowDetails(window) {
-      console.log('跳转到窗口详情，完整window对象:', window);
-      console.log('跳转到窗口详情，windowId:', window.id);
-      console.log('跳转到窗口详情，canteenId:', this.canteen.id);
+      if (!window?.id || !this.canteen?.id) {
+        this.$message.error('窗口信息不完整')
+        return
+      }
       this.$router.push({
         path: `/main/user/window-details/${window.id}/${this.canteen.id}`
-      });
+      })
     }
   }
 }

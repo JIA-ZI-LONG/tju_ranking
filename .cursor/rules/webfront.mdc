@@ -7,8 +7,8 @@ alwaysApply: true
 
 ## 1.前后端交互
 
-- 撰写所有的.vue页面时，参考@数据结构.sql文件，使前后端的数据结构保持一致。
-- 撰写service时，参考@接口文档。
+- 撰写所有的.vue页面时，参考@webapi\新建文件夹\back\src，使前后端的数据结构保持一致。
+- 撰写service时，参考@webapi\新建文件夹\back\src。
 - 在.vue界面内，将model放入computed属性而非method属性。
 
 ## 2.异步操作

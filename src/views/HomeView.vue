@@ -51,12 +51,17 @@
             <span>热门食堂</span>
             <el-button style="float: right; padding: 3px 0" type="text" @click="$router.push('/main/user/canteenslist')">查看更多</el-button>
           </div>
-          <div v-for="canteen in hotCanteens" :key="canteen.id" class="list-item">
-            <img :src="canteen.image" alt="食堂图片" class="item-image">
-            <div class="item-info">
-              <span class="item-title">{{ canteen.name }}</span>
-              <el-rate v-model="canteen.rating" disabled show-score text-color="#ff9900" score-template="{value}分"></el-rate>
-              <p class="item-desc">{{ canteen.desc }}</p>
+          <div v-loading="loading.canteens" style="min-height: 200px;">
+            <div v-if="hotCanteens.length === 0 && !loading.canteens" class="empty-state">
+              <p>暂无食堂数据</p>
+            </div>
+            <div v-for="canteen in hotCanteens" :key="canteen.id" class="list-item" @click="goToCanteenDetail(canteen.id)">
+              <img :src="canteen.image" alt="食堂图片" class="item-image">
+              <div class="item-info">
+                <span class="item-title">{{ canteen.name }}</span>
+                <el-rate v-model="canteen.rating" disabled show-score text-color="#ff9900" score-template="{value}分"></el-rate>
+                <p class="item-desc">{{ canteen.desc }}</p>
+              </div>
             </div>
           </div>
         </el-card>
@@ -67,12 +72,17 @@
             <span>最新博客</span>
             <el-button style="float: right; padding: 3px 0" type="text" @click="$router.push('/main/user/blogslist')">查看更多</el-button>
           </div>
-          <div v-for="blog in latestBlogs" :key="blog.id" class="list-item">
-            <img :src="blog.image" alt="博客图片" class="item-image">
-            <div class="item-info">
-              <span class="item-title">{{ blog.title }}</span>
-              <p class="item-author">作者: {{ blog.author }}</p>
-              <p class="item-desc">{{ blog.summary }}</p>
+          <div v-loading="loading.blogs" style="min-height: 200px;">
+            <div v-if="latestBlogs.length === 0 && !loading.blogs" class="empty-state">
+              <p>暂无博客数据</p>
+            </div>
+            <div v-for="blog in latestBlogs" :key="blog.id" class="list-item" @click="goToBlogDetail(blog.id)">
+              <img :src="blog.image" alt="博客图片" class="item-image">
+              <div class="item-info">
+                <span class="item-title">{{ blog.title }}</span>
+                <p class="item-author">作者: {{ blog.author }}</p>
+                <p class="item-desc">{{ blog.summary }}</p>
+              </div>
             </div>
           </div>
         </el-card>
@@ -82,27 +92,119 @@
 </template>
 
 <script>
+import CanteenServices from '@/service/CanteenServices'
+import BlogServices from '@/service/BlogServices'
+
 export default {
   name: 'HomeView',
   data() {
     return {
       searchKeyword: '',
-      hotCanteens: [
-        { id: 1, name: '学一食堂', rating: 4.8, desc: '北洋园校区人气最旺，菜品种类丰富，味道地道。', image: 'https://via.placeholder.com/100x100?text=Canteen1' },
-        { id: 2, name: '学三食堂', rating: 4.5, desc: '卫津路校区经典老牌食堂，特色面食值得一试。', image: 'https://via.placeholder.com/100x100?text=Canteen2' },
-        // 更多热门食堂数据...
-      ],
-      latestBlogs: [
-        { id: 1, title: '天大特色美食攻略', author: '美食探索家', summary: '带你探秘天大校园内的隐藏美食！', image: 'https://via.placeholder.com/100x100?text=Blog1' },
-        { id: 2, title: '食堂一周不重样挑战', author: '吃货小分队', summary: '挑战在天大食堂吃一周不重样，附详细菜单。', image: 'https://via.placeholder.com/100x100?text=Blog2' },
-        // 更多最新博客数据...
-      ]
+      hotCanteens: [],
+      latestBlogs: [],
+      loading: {
+        canteens: false,
+        blogs: false
+      }
+    }
+  },
+  mounted() {
+    this.loadHotCanteens()
+    this.loadLatestBlogs()
+  },
+  computed: {
+    hotCanteensModel() {
+      return this.hotCanteens.map(canteen => ({
+        id: canteen.id,
+        name: canteen.name,
+        rating: canteen.score || 0,
+        desc: canteen.introduction || '暂无介绍',
+        image: canteen.imageUrl || 'https://via.placeholder.com/100x100?text=' + encodeURIComponent(canteen.name)
+      }))
+    },
+    latestBlogsModel() {
+      return this.latestBlogs.map(blog => ({
+        id: blog.id,
+        title: blog.title,
+        author: blog.authorName || '匿名用户',
+        summary: this.extractSummary(blog.content),
+        image: blog.imageUrl || 'https://via.placeholder.com/100x100?text=' + encodeURIComponent(blog.title)
+      }))
     }
   },
   methods: {
+    // 加载热门食堂数据
+    loadHotCanteens() {
+      this.loading.canteens = true
+      CanteenServices.GetAllCanteens()
+        .then(response => {
+          if (response.success && response.data) {
+            this.hotCanteens = (Array.isArray(response.data) ? response.data : [])
+              .slice(0, 3)
+          } else {
+            this.$message.error('获取食堂数据失败：' + (response.errorMsg || '未知错误'))
+          }
+        })
+        .catch(error => {
+          console.error('加载热门食堂失败：', error)
+          this.$message.error('加载热门食堂失败：' + (error.message || '网络错误'))
+        })
+        .finally(() => {
+          this.loading.canteens = false
+        })
+    },
+    // 加载最新博客数据
+    loadLatestBlogs() {
+      this.loading.blogs = true
+      BlogServices.GetHotBlogs(1)
+        .then(response => {
+          if (response.success && response.data) {
+            const blogs = Array.isArray(response.data) ? response.data :
+                         (response.data.records ? response.data.records : [])
+            this.latestBlogs = blogs.slice(0, 3)
+          } else {
+            this.$message.error('获取博客数据失败：' + (response.errorMsg || '未知错误'))
+          }
+        })
+        .catch(error => {
+          console.error('加载最新博客失败：', error)
+          this.$message.error('加载最新博客失败：' + (error.message || '网络错误'))
+        })
+        .finally(() => {
+          this.loading.blogs = false
+        })
+    },
+    // 从博客内容中提取摘要
+    extractSummary(content) {
+      if (!content) return '暂无内容'
+      // 移除HTML标签并截取前50个字符
+      const plainText = content.replace(/<[^>]*>/g, '')
+      return plainText.length > 50 ? plainText.substring(0, 50) + '...' : plainText
+    },
+    // 处理搜索
     handleSearch() {
-      this.$message.info(`您搜索了: ${this.searchKeyword}`)
-      // TODO: 实现搜索功能跳转
+      if (!this.searchKeyword.trim()) {
+        this.$message.warning('请输入搜索关键词')
+        return
+      }
+
+      // 根据搜索内容跳转到相应页面
+      this.$message.info(`正在搜索: ${this.searchKeyword}`)
+
+      // 可以根据关键词类型跳转到不同页面
+      // 这里简单实现跳转到菜品搜索页面
+      this.$router.push({
+        path: '/main/user/disheslist',
+        query: { search: this.searchKeyword }
+      })
+    },
+    // 跳转到食堂详情页
+    goToCanteenDetail(canteenId) {
+      this.$router.push(`/main/user/canteens/${canteenId}`)
+    },
+    // 跳转到博客详情页
+    goToBlogDetail(blogId) {
+      this.$router.push(`/main/user/blogs/${blogId}`)
     }
   }
 }
@@ -236,6 +338,12 @@ export default {
   align-items: center;
   padding: 15px 0;
   border-bottom: 1px solid #ebeef5;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.list-item:hover {
+  background-color: #f5f7fa;
 }
 
 .list-item:last-child {
@@ -272,10 +380,23 @@ export default {
   text-overflow: ellipsis;
   display: -webkit-box;
   -webkit-line-clamp: 2; /* 限制2行 */
+  line-clamp: 2; /* 标准属性 */
   -webkit-box-orient: vertical;
 }
 
 .el-rate {
   line-height: 1; /* 解决评分组件垂直对齐问题 */
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 0;
+  color: #909399;
+}
+
+.item-author {
+  font-size: 12px;
+  color: #909399;
+  margin: 5px 0;
 }
 </style>

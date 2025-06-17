@@ -83,72 +83,71 @@
 </template>
 
 <script>
+import BlogServices from '@/service/BlogServices'
+
 export default {
   data() {
     return {
       dialogVisible: false,
       currentBlog: {},
-      blogs: [
-        {
-          id: 1,
-          title: '天津大学美食探店：学一食堂隐藏菜单大揭秘！',
-          imageUrl: 'https://via.placeholder.com/300x200?text=Blog+Image+1',
-          date: '2023-03-15',
-          rating: 4.5,
-          price: 15,
-          content: '今天给大家带来学一食堂的隐藏菜单！这里的红烧肉真的是一绝，肉质鲜嫩，入口即化。还有他们家的特色小炒，价格实惠，分量十足。强烈推荐大家来尝试！',
-          tags: ['美食', '实惠', '特色菜'],
-          author: {
-            name: '美食达人',
-            avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-          }
-        },
-        {
-          id: 2,
-          title: '北洋园校区夜跑攻略：发现不一样的校园美景',
-          imageUrl: 'https://via.placeholder.com/300x200?text=Blog+Image+2',
-          date: '2023-03-10',
-          rating: 4.0,
-          price: 0,
-          tags: ['运动', '校园', '美景'],
-          author: {
-            name: '运动健将',
-            avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-          }
-        },
-        {
-          id: 3,
-          title: '卫津路校区图书馆学习心得：如何高效利用资源',
-          imageUrl: 'https://via.placeholder.com/300x200?text=Blog+Image+3',
-          date: '2023-03-08',
-          rating: 4.8,
-          price: 0,
-          tags: ['学习', '图书馆', '攻略'],
-          author: {
-            name: '学霸笔记',
-            avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-          }
-        },
-        {
-          id: 4,
-          title: '天大周边咖啡馆推荐：期末复习好去处',
-          imageUrl: 'https://via.placeholder.com/300x200?text=Blog+Image+4',
-          date: '2023-03-05',
-          rating: 4.8,
-          price: 0,
-          tags: ['学习', '图书馆', '攻略'],
-          author: {
-            name: '咖啡控',
-            avatar: 'https://cube.elemecdn.com/0/88/03b0d39583f48206768a7534e55bcpng.png'
-          }
-        }
-      ]
+      blogsData: [],
+      loading: false,
+      currentPage: 1,
+      pageSize: 12,
+      total: 0
     }
   },
+  computed: {
+    blogsModel() {
+      return this.blogsData.map(blog => ({
+        id: blog.id,
+        title: blog.title,
+        content: blog.content,
+        imageUrl: blog.images && blog.images.length > 0 ? blog.images[0] : '/default-blog-image.jpg',
+        author: {
+          name: blog.user?.nickname || '匿名用户',
+          avatar: blog.user?.icon || '/default-avatar.jpg'
+        },
+        date: this.formatDate(blog.createTime),
+        rating: 5,
+        price: 0,
+        tags: blog.tags || [],
+        liked: blog.liked || 0,
+        comments: blog.comments || 0
+      }))
+    }
+  },
+  mounted() {
+    this.loadBlogs()
+  },
   methods: {
+    loadBlogs() {
+      this.loading = true
+      BlogServices.GetHotBlogs(this.currentPage)
+        .then(response => {
+          if (response.success) {
+            this.blogsData = response.data || []
+            this.total = response.total || 0
+          } else {
+            this.$message.error(response.errorMsg || '获取博客列表失败')
+          }
+        })
+        .catch(error => {
+          console.error('获取博客列表失败:', error)
+          this.$message.error('获取博客列表失败')
+        })
+        .finally(() => {
+          this.loading = false
+        })
+    },
     showBlogDetail(blog) {
       this.currentBlog = blog
       this.dialogVisible = true
+    },
+    formatDate(dateString) {
+      if (!dateString) return ''
+      const date = new Date(dateString)
+      return date.toLocaleDateString('zh-CN')
     }
   }
 }

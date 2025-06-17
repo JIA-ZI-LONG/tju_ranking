@@ -5,8 +5,8 @@
         <h2>用户登录</h2>
       </div>
       <el-form :model="loginForm" :rules="rules" ref="loginForm" label-width="80px" size="small">
-        <el-form-item label="用户名" prop="username">
-          <el-input v-model="loginForm.username" placeholder="请输入用户名" prefix-icon="el-icon-user"></el-input>
+        <el-form-item label="账号" prop="account">
+          <el-input v-model="loginForm.account" placeholder="请输入账号" prefix-icon="el-icon-user"></el-input>
         </el-form-item>
         <el-form-item label="密码" prop="password">
           <el-input v-model="loginForm.password" type="password" placeholder="请输入密码" prefix-icon="el-icon-lock" @keyup.enter.native="submitForm('loginForm')"></el-input>
@@ -83,12 +83,12 @@ export default {
 
     return {
       loginForm: {
-        username: '',
+        account: '',
         password: ''
       },
       rules: {
-        username: [
-          { required: true, message: '请输入用户名', trigger: 'blur' },
+        account: [
+          { required: true, message: '请输入账号', trigger: 'blur' },
           { min: 3, max: 20, message: '长度在 3 到 20 个字符', trigger: 'blur' }
         ],
         password: [
@@ -103,7 +103,9 @@ export default {
         email: '',
         code: '',
         newPassword: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        captchaKey: '',
+        captchaCode: ''
       },
       resetRules: {
         username: [
@@ -128,25 +130,26 @@ export default {
       },
       codeButtonText: '获取验证码',
       codeButtonDisabled: false,
-      countdown: 60
+      countdown: 60,
+      // 图形验证码相关
+      captchaImage: '',
+      captchaKey: ''
     }
   },
-
-
 
   computed: {
     loginModel() {
       return {
-        account: this.loginForm.username,
+        account: this.loginForm.account,
         password: this.loginForm.password
       }
     },
     verificationCodeModel() {
       return {
         email: this.resetForm.email,
-        type: 0 // 假设0代表重置密码的验证码类型，根据后端实际定义调整
-        // captchaKey: '', // 如果后端需要图形验证码，请在此处添加
-        // captchaCode: '' // 如果后端需要图形验证码，请在此处添加
+        type: 0,
+        captchaKey: this.resetForm.captchaKey,
+        captchaCode: this.resetForm.captchaCode
       }
     },
     resetPasswordModel() {
@@ -158,8 +161,6 @@ export default {
     }
   },
 
-
-  
   methods: {
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
@@ -167,10 +168,15 @@ export default {
           AccountServices.Login(this.loginModel)
             .then(response => {
               if (response.success) {
-                localStorage.setItem('token', response.data.token)
-                this.$store.dispatch('login', response.data.token, this.loginForm.username)
-                this.$message.success('登录成功！')
-                this.$router.push('/main/home')
+                const userData = response.data
+                if (userData && userData.token) {
+                  localStorage.setItem('token', userData.token)
+                  this.$store.dispatch('login', { token: userData.token, username: this.loginForm.account })
+                  this.$message.success('登录成功！')
+                  this.$router.push('/main/home')
+                } else {
+                  this.$message.error('登录响应数据格式错误')
+                }
               } else {
                 this.$message.error(response.errorMsg || '登录失败，请稍后重试。')
               }
@@ -192,17 +198,34 @@ export default {
         email: '',
         code: '',
         newPassword: '',
-        confirmPassword: ''
+        confirmPassword: '',
+        captchaKey: '',
+        captchaCode: ''
       }
+      // 获取图形验证码
+      this.getCaptcha()
+    },
+    // 获取图形验证码
+    getCaptcha() {
+      AccountServices.GetCaptcha()
+        .then(response => {
+          if (response.success) {
+            this.captchaImage = response.data.image
+            this.captchaKey = response.data.key
+            this.resetForm.captchaKey = response.data.key
+          } else {
+            this.$message.error('获取验证码失败')
+          }
+        })
+        .catch(error => {
+          console.error('获取图形验证码错误：', error)
+          this.$message.error('获取图形验证码失败')
+        })
     },
     // 发送验证码
     sendVerificationCode() {
-      if (!this.resetForm.email) {
-        this.$message.warning('请先输入邮箱地址')
-        return
-      }
-      if (!this.resetForm.username) {
-        this.$message.warning('请先输入用户名')
+      if (!this.resetForm.email || !this.resetForm.captchaCode) {
+        this.$message.warning('请先输入邮箱地址和图形验证码')
         return
       }
 
@@ -213,11 +236,13 @@ export default {
             this.startCountdown()
           } else {
             this.$message.error(response.errorMsg || '发送验证码失败，请稍后重试')
+            this.getCaptcha()
           }
         })
         .catch(error => {
-          console.error('发送验证码请求错误：', error) // 调试用
+          console.error('发送验证码请求错误：', error)
           this.$message.error('发送验证码失败：' + (error.message || '网络错误或服务器无响应'))
+          this.getCaptcha()
         })
     },
     // 开始倒计时
