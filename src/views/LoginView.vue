@@ -131,26 +131,53 @@ export default {
       countdown: 60
     }
   },
+
+
+
+  computed: {
+    loginModel() {
+      return {
+        account: this.loginForm.username,
+        password: this.loginForm.password
+      }
+    },
+    verificationCodeModel() {
+      return {
+        email: this.resetForm.email,
+        type: 0 // 假设0代表重置密码的验证码类型，根据后端实际定义调整
+        // captchaKey: '', // 如果后端需要图形验证码，请在此处添加
+        // captchaCode: '' // 如果后端需要图形验证码，请在此处添加
+      }
+    },
+    resetPasswordModel() {
+      return {
+        email: this.resetForm.email,
+        code: this.resetForm.code,
+        newPassword: this.resetForm.newPassword
+      }
+    }
+  },
+
+
+  
   methods: {
     submitForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          const loginData = {
-            username: this.loginForm.username,
-            password: this.loginForm.password
-          }
-
-          AccountServices.Login(loginData)
+          AccountServices.Login(this.loginModel)
             .then(response => {
-              if (response.data) {
+              if (response.success) {
                 localStorage.setItem('token', response.data.token)
                 this.$store.dispatch('login', response.data.token, this.loginForm.username)
                 this.$message.success('登录成功！')
                 this.$router.push('/main/home')
+              } else {
+                this.$message.error(response.errorMsg || '登录失败，请稍后重试。')
               }
             })
             .catch(error => {
-              this.$message.error('登录失败：' + (error.message || '用户名或密码错误'))
+              console.error('登录请求错误：', error)
+              this.$message.error('登录失败：' + (error.message || '网络错误或服务器无响应。'))
             })
         } else {
           return false
@@ -179,9 +206,19 @@ export default {
         return
       }
 
-      // TODO: 调用发送验证码接口
-      this.$message.success('验证码已发送到您的邮箱')
-      this.startCountdown()
+      AccountServices.SendVerificationCode(this.verificationCodeModel)
+        .then(response => {
+          if (response.success) {
+            this.$message.success('验证码已发送到您的邮箱')
+            this.startCountdown()
+          } else {
+            this.$message.error(response.errorMsg || '发送验证码失败，请稍后重试')
+          }
+        })
+        .catch(error => {
+          console.error('发送验证码请求错误：', error) // 调试用
+          this.$message.error('发送验证码失败：' + (error.message || '网络错误或服务器无响应'))
+        })
     },
     // 开始倒计时
     startCountdown() {
@@ -202,9 +239,19 @@ export default {
     submitResetForm(formName) {
       this.$refs[formName].validate((valid) => {
         if (valid) {
-          // TODO: 调用重置密码接口
-          this.$message.success('密码重置成功，请使用新密码登录')
-          this.resetPasswordVisible = false
+          AccountServices.ResetPassword(this.resetPasswordModel)
+            .then(response => {
+              if (response.success) {
+                this.$message.success('密码重置成功，请使用新密码登录')
+                this.resetPasswordVisible = false
+              } else {
+                this.$message.error(response.errorMsg || '密码重置失败，请稍后重试')
+              }
+            })
+            .catch(error => {
+              console.error('密码重置请求错误：', error) // 调试用
+              this.$message.error('密码重置失败：' + (error.message || '网络错误或服务器无响应'))
+            })
         } else {
           return false
         }

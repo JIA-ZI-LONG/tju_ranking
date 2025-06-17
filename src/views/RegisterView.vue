@@ -141,6 +141,33 @@ export default {
       countdown: 60
     }
   },
+
+
+  
+  computed: {
+    verificationCodeModel() {
+      return {
+        email: this.registerForm.email,
+        type: 1 // 假设1代表注册的验证码类型，根据后端实际定义调整
+        // captchaKey: '', // 如果后端需要图形验证码，请在此处添加
+        // captchaCode: '' // 如果后端需要图形验证码，请在此处添加
+      }
+    },
+    registerModel() {
+      return {
+        email: this.registerForm.email,
+        password: this.registerForm.password,
+        confirmPassword: this.registerForm.confirmPassword,
+        code: this.registerForm.code,
+        nickname: this.registerForm.username,
+        gender: this.registerForm.gender,
+        campus: this.registerForm.campus
+      }
+    }
+  },
+
+
+
   methods: {
     // 发送验证码
     sendVerificationCode() {
@@ -153,9 +180,19 @@ export default {
         return
       }
 
-      // TODO: 调用发送验证码接口
-      this.$message.success('验证码已发送到您的邮箱')
-      this.startCountdown()
+      AccountServices.SendVerificationCode(this.verificationCodeModel)
+        .then(response => {
+          if (response.success) {
+            this.$message.success('验证码已发送到您的邮箱')
+            this.startCountdown()
+          } else {
+            this.$message.error(response.errorMsg || '发送验证码失败，请稍后重试')
+          }
+        })
+        .catch(error => {
+          console.error('发送验证码请求错误：', error) // 调试用
+          this.$message.error('发送验证码失败：' + (error.message || '网络错误或服务器无响应'))
+        })
     },
     // 开始倒计时
     startCountdown() {
@@ -183,28 +220,22 @@ export default {
                 return
               }
 
-              // 准备注册数据
-              const registerData = {
-                username: this.registerForm.username,
-                password: this.registerForm.password,
-                email: this.registerForm.email,
-                code: this.registerForm.code,
-                gender: this.registerForm.gender,
-                campus: this.registerForm.campus
-              }
-
               // 调用注册接口
-              return AccountServices.Register(registerData)
+              return AccountServices.Register(this.registerModel)
             })
             .then(response => {
-              if (response.data) {
+              if (response.success) {
                 this.$message.success('注册成功！')
                 // 注册成功后跳转到登录页
                 this.$router.push('/login')
+              } else {
+                // 注册失败处理，显示后端返回的错误信息
+                this.$message.error(response.errorMsg || '注册失败，请稍后重试。')
               }
             })
             .catch(error => {
-              this.$message.error('注册失败：' + (error.message || '未知错误'))
+              console.error('注册请求错误：', error) // 调试用
+              this.$message.error('注册失败：' + (error.message || '网络错误或服务器无响应。'))
             })
         } else {
           return false
